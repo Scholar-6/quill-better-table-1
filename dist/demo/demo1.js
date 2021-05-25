@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("quill"));
+		module.exports = factory(require("react-quill"), require("quill"));
 	else if(typeof define === 'function' && define.amd)
-		define(["quill"], factory);
+		define(["react-quill", "quill"], factory);
 	else if(typeof exports === 'object')
-		exports["quillBetterTable"] = factory(require("quill"));
+		exports["quillBetterTable"] = factory(require("react-quill"), require("quill"));
 	else
-		root["quillBetterTable"] = factory(root["Quill"]);
-})(window, function(__WEBPACK_EXTERNAL_MODULE__0__) {
+		root["quillBetterTable"] = factory(root[undefined], root["Quill"]);
+})(window, function(__WEBPACK_EXTERNAL_MODULE__0__, __WEBPACK_EXTERNAL_MODULE__10__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	function hotDisposeChunk(chunkId) {
 /******/ 		delete installedChunks[chunkId];
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "ced44c7892a78034ffe4";
+/******/ 	var hotCurrentHash = "0f3489899ea545892423";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -166,6 +166,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 			_declinedDependencies: {},
 /******/ 			_selfAccepted: false,
 /******/ 			_selfDeclined: false,
+/******/ 			_selfInvalidated: false,
 /******/ 			_disposeHandlers: [],
 /******/ 			_main: hotCurrentChildModule !== moduleId,
 /******/
@@ -195,6 +196,29 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 			removeDisposeHandler: function(callback) {
 /******/ 				var idx = hot._disposeHandlers.indexOf(callback);
 /******/ 				if (idx >= 0) hot._disposeHandlers.splice(idx, 1);
+/******/ 			},
+/******/ 			invalidate: function() {
+/******/ 				this._selfInvalidated = true;
+/******/ 				switch (hotStatus) {
+/******/ 					case "idle":
+/******/ 						hotUpdate = {};
+/******/ 						hotUpdate[moduleId] = modules[moduleId];
+/******/ 						hotSetStatus("ready");
+/******/ 						break;
+/******/ 					case "ready":
+/******/ 						hotApplyInvalidatedModule(moduleId);
+/******/ 						break;
+/******/ 					case "prepare":
+/******/ 					case "check":
+/******/ 					case "dispose":
+/******/ 					case "apply":
+/******/ 						(hotQueuedInvalidatedModules =
+/******/ 							hotQueuedInvalidatedModules || []).push(moduleId);
+/******/ 						break;
+/******/ 					default:
+/******/ 						// ignore requests in error states
+/******/ 						break;
+/******/ 				}
 /******/ 			},
 /******/
 /******/ 			// Management API
@@ -237,7 +261,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	var hotDeferred;
 /******/
 /******/ 	// The update info
-/******/ 	var hotUpdate, hotUpdateNewHash;
+/******/ 	var hotUpdate, hotUpdateNewHash, hotQueuedInvalidatedModules;
 /******/
 /******/ 	function toModuleId(id) {
 /******/ 		var isNumber = +id + "" === id;
@@ -252,7 +276,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 		hotSetStatus("check");
 /******/ 		return hotDownloadManifest(hotRequestTimeout).then(function(update) {
 /******/ 			if (!update) {
-/******/ 				hotSetStatus("idle");
+/******/ 				hotSetStatus(hotApplyInvalidatedModules() ? "ready" : "idle");
 /******/ 				return null;
 /******/ 			}
 /******/ 			hotRequestedFilesMap = {};
@@ -271,7 +295,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 			var chunkId = 0;
 /******/ 			// eslint-disable-next-line no-lone-blocks
 /******/ 			{
-/******/ 				/*globals chunkId */
 /******/ 				hotEnsureUpdateChunk(chunkId);
 /******/ 			}
 /******/ 			if (
@@ -346,6 +369,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 		if (hotStatus !== "ready")
 /******/ 			throw new Error("apply() is only allowed in ready status");
 /******/ 		options = options || {};
+/******/ 		return hotApplyInternal(options);
+/******/ 	}
+/******/
+/******/ 	function hotApplyInternal(options) {
+/******/ 		hotApplyInvalidatedModules();
 /******/
 /******/ 		var cb;
 /******/ 		var i;
@@ -368,7 +396,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 				var moduleId = queueItem.id;
 /******/ 				var chain = queueItem.chain;
 /******/ 				module = installedModules[moduleId];
-/******/ 				if (!module || module.hot._selfAccepted) continue;
+/******/ 				if (
+/******/ 					!module ||
+/******/ 					(module.hot._selfAccepted && !module.hot._selfInvalidated)
+/******/ 				)
+/******/ 					continue;
 /******/ 				if (module.hot._selfDeclined) {
 /******/ 					return {
 /******/ 						type: "self-declined",
@@ -536,10 +568,13 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 				installedModules[moduleId] &&
 /******/ 				installedModules[moduleId].hot._selfAccepted &&
 /******/ 				// removed self-accepted modules should not be required
-/******/ 				appliedUpdate[moduleId] !== warnUnexpectedRequire
+/******/ 				appliedUpdate[moduleId] !== warnUnexpectedRequire &&
+/******/ 				// when called invalidate self-accepting is not possible
+/******/ 				!installedModules[moduleId].hot._selfInvalidated
 /******/ 			) {
 /******/ 				outdatedSelfAcceptedModules.push({
 /******/ 					module: moduleId,
+/******/ 					parents: installedModules[moduleId].parents.slice(),
 /******/ 					errorHandler: installedModules[moduleId].hot._selfAccepted
 /******/ 				});
 /******/ 			}
@@ -612,7 +647,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 		// Now in "apply" phase
 /******/ 		hotSetStatus("apply");
 /******/
-/******/ 		hotCurrentHash = hotUpdateNewHash;
+/******/ 		if (hotUpdateNewHash !== undefined) {
+/******/ 			hotCurrentHash = hotUpdateNewHash;
+/******/ 			hotUpdateNewHash = undefined;
+/******/ 		}
+/******/ 		hotUpdate = undefined;
 /******/
 /******/ 		// insert new code
 /******/ 		for (moduleId in appliedUpdate) {
@@ -665,7 +704,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 		for (i = 0; i < outdatedSelfAcceptedModules.length; i++) {
 /******/ 			var item = outdatedSelfAcceptedModules[i];
 /******/ 			moduleId = item.module;
-/******/ 			hotCurrentParents = [moduleId];
+/******/ 			hotCurrentParents = item.parents;
+/******/ 			hotCurrentChildModule = moduleId;
 /******/ 			try {
 /******/ 				__webpack_require__(moduleId);
 /******/ 			} catch (err) {
@@ -707,10 +747,33 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 			return Promise.reject(error);
 /******/ 		}
 /******/
+/******/ 		if (hotQueuedInvalidatedModules) {
+/******/ 			return hotApplyInternal(options).then(function(list) {
+/******/ 				outdatedModules.forEach(function(moduleId) {
+/******/ 					if (list.indexOf(moduleId) < 0) list.push(moduleId);
+/******/ 				});
+/******/ 				return list;
+/******/ 			});
+/******/ 		}
+/******/
 /******/ 		hotSetStatus("idle");
 /******/ 		return new Promise(function(resolve) {
 /******/ 			resolve(outdatedModules);
 /******/ 		});
+/******/ 	}
+/******/
+/******/ 	function hotApplyInvalidatedModules() {
+/******/ 		if (hotQueuedInvalidatedModules) {
+/******/ 			if (!hotUpdate) hotUpdate = {};
+/******/ 			hotQueuedInvalidatedModules.forEach(hotApplyInvalidatedModule);
+/******/ 			hotQueuedInvalidatedModules = undefined;
+/******/ 			return true;
+/******/ 		}
+/******/ 	}
+/******/
+/******/ 	function hotApplyInvalidatedModule(moduleId) {
+/******/ 		if (!Object.prototype.hasOwnProperty.call(hotUpdate, moduleId))
+/******/ 			hotUpdate[moduleId] = modules[moduleId];
 /******/ 	}
 /******/
 /******/ 	// The module cache
@@ -801,7 +864,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return hotCreateRequire(13)(__webpack_require__.s = 13);
+/******/ 	return hotCreateRequire(14)(__webpack_require__.s = 14);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -866,14 +929,20 @@ module.exports = "<?xml version=\"1.0\" standalone=\"no\"?><!doctype html><svg c
 
 /***/ }),
 /* 10 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__10__;
+
+/***/ }),
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+// ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
 
-// EXTERNAL MODULE: external {"commonjs":"quill","commonjs2":"quill","amd":"quill","root":"Quill"}
-var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_ = __webpack_require__(0);
-var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_);
+// EXTERNAL MODULE: external {"commonjs":"react-quill","commonjs2":"react-quill","amd":"react-quill"}
+var external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_ = __webpack_require__(0);
 
 // CONCATENATED MODULE: ./src/utils/index.js
 function css(domNode, rules) {
@@ -1001,10 +1070,10 @@ class table_column_tool_TableColumnTool {
     this.updateToolCells();
     parent.appendChild(this.domNode);
     css(this.domNode, {
-      width: "".concat(tableViewRect.width, "px"),
-      height: "".concat(COL_TOOL_HEIGHT, "px"),
-      left: "".concat(tableViewRect.left - containerRect.left + parent.scrollLeft, "px"),
-      top: "".concat(tableViewRect.top - containerRect.top + parent.scrollTop - COL_TOOL_HEIGHT - 5, "px")
+      width: `${tableViewRect.width}px`,
+      height: `${COL_TOOL_HEIGHT}px`,
+      left: `${tableViewRect.left - containerRect.left + parent.scrollLeft}px`,
+      top: `${tableViewRect.top - containerRect.top + parent.scrollTop - COL_TOOL_HEIGHT - 5}px`
     });
   }
 
@@ -1014,14 +1083,14 @@ class table_column_tool_TableColumnTool {
     const resizeHolder = document.createElement('div');
     resizeHolder.classList.add('qlbt-col-tool-cell-holder');
     css(toolCell, {
-      'height': "".concat(COL_TOOL_CELL_HEIGHT, "px")
+      'height': `${COL_TOOL_CELL_HEIGHT}px`
     });
     toolCell.appendChild(resizeHolder);
     return toolCell;
   }
 
   updateToolCells() {
-    const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+    const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
     const CellsInFirstRow = tableContainer.children.tail.children.head.children;
     const tableCols = tableContainer.colGroup().children;
     const cellsNumber = computeCellsNumber(CellsInFirstRow);
@@ -1039,7 +1108,7 @@ class table_column_tool_TableColumnTool {
         this.addColCellHolderHandler(toolCell); // set tool cell min-width
 
         css(toolCell, {
-          'min-width': "".concat(colWidth, "px")
+          'min-width': `${colWidth}px`
         });
       } else if (existCells[index] && index >= cellsNumber) {
         existCells[index].remove();
@@ -1047,7 +1116,7 @@ class table_column_tool_TableColumnTool {
         toolCell = existCells[index]; // set tool cell min-width
 
         css(toolCell, {
-          'min-width': "".concat(colWidth, "px")
+          'min-width': `${colWidth}px`
         });
       }
     }
@@ -1059,7 +1128,7 @@ class table_column_tool_TableColumnTool {
   }
 
   addColCellHolderHandler(cell) {
-    const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+    const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
     const $holder = cell.querySelector(".qlbt-col-tool-cell-holder");
     let dragging = false;
     let x0 = 0;
@@ -1084,7 +1153,7 @@ class table_column_tool_TableColumnTool {
         }
 
         css($helpLine, {
-          'left': "".concat(cellRect.left + cellRect.width - 1 + delta, "px")
+          'left': `${cellRect.left + cellRect.width - 1 + delta}px`
         });
       }
     };
@@ -1098,7 +1167,7 @@ class table_column_tool_TableColumnTool {
       if (dragging) {
         colBlot.format('width', width0 + delta);
         css(cell, {
-          'min-width': "".concat(width0 + delta, "px")
+          'min-width': `${width0 + delta}px`
         });
         x0 = 0;
         x = 0;
@@ -1127,10 +1196,10 @@ class table_column_tool_TableColumnTool {
       $helpLine = document.createElement('div');
       css($helpLine, {
         position: 'fixed',
-        top: "".concat(cellRect.top, "px"),
-        left: "".concat(cellRect.left + cellRect.width - 1, "px"),
+        top: `${cellRect.top}px`,
+        left: `${cellRect.left + cellRect.width - 1}px`,
         zIndex: '100',
-        height: "".concat(tableRect.height + COL_TOOL_HEIGHT + 4, "px"),
+        height: `${tableRect.height + COL_TOOL_HEIGHT + 4}px`,
         width: '1px',
         backgroundColor: PRIMARY_COLOR
       });
@@ -1160,7 +1229,7 @@ function computeCellsNumber(CellsInFirstRow) {
 // CONCATENATED MODULE: ./src/formats/header.js
 
 
-const Block = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import("blots/block");
+const Block = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import("blots/block");
 
 class header_Header extends Block {
   static create(value) {
@@ -1172,10 +1241,10 @@ class header_Header extends Block {
 
     const node = super.create(value.value);
     CELL_IDENTITY_KEYS.forEach(key => {
-      if (value[key]) node.setAttribute("data-".concat(key), value[key]);
+      if (value[key]) node.setAttribute(`data-${key}`, value[key]);
     });
     CELL_ATTRIBUTES.forEach(key => {
-      if (value[key]) node.setAttribute("data-".concat(key), value[key]);
+      if (value[key]) node.setAttribute(`data-${key}`, value[key]);
     });
     return node;
   }
@@ -1184,8 +1253,8 @@ class header_Header extends Block {
     const formats = {};
     formats.value = this.tagName.indexOf(domNode.tagName) + 1;
     return CELL_ATTRIBUTES.concat(CELL_IDENTITY_KEYS).reduce((formats, attribute) => {
-      if (domNode.hasAttribute("data-".concat(attribute))) {
-        formats[attribute] = domNode.getAttribute("data-".concat(attribute)) || undefined;
+      if (domNode.hasAttribute(`data-${attribute}`)) {
+        formats[attribute] = domNode.getAttribute(`data-${attribute}`) || undefined;
       }
 
       return formats;
@@ -1271,9 +1340,9 @@ header_Header.tagName = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
 
 
-const Break = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import("blots/break");
-const table_Block = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import("blots/block");
-const Container = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import("blots/container");
+const Break = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import("blots/break");
+const table_Block = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import("blots/block");
+const Container = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import("blots/container");
 const COL_ATTRIBUTES = ["width"];
 const COL_DEFAULT = {
   width: 100
@@ -1291,10 +1360,10 @@ class TableCellLine extends table_Block {
     const node = super.create(value);
     CELL_IDENTITY_KEYS.forEach(key => {
       let identityMaker = key === 'row' ? table_rowId : table_cellId;
-      node.setAttribute("data-".concat(key), value[key] || identityMaker());
+      node.setAttribute(`data-${key}`, value[key] || identityMaker());
     });
     CELL_ATTRIBUTES.forEach(attrName => {
-      node.setAttribute("data-".concat(attrName), value[attrName] || CELL_DEFAULT[attrName]);
+      node.setAttribute(`data-${attrName}`, value[attrName] || CELL_DEFAULT[attrName]);
     });
 
     if (value['cell-bg']) {
@@ -1307,8 +1376,8 @@ class TableCellLine extends table_Block {
   static formats(domNode) {
     const formats = {};
     return CELL_ATTRIBUTES.concat(CELL_IDENTITY_KEYS).concat(['cell-bg']).reduce((formats, attribute) => {
-      if (domNode.hasAttribute("data-".concat(attribute))) {
-        formats[attribute] = domNode.getAttribute("data-".concat(attribute)) || undefined;
+      if (domNode.hasAttribute(`data-${attribute}`)) {
+        formats[attribute] = domNode.getAttribute(`data-${attribute}`) || undefined;
       }
 
       return formats;
@@ -1318,9 +1387,9 @@ class TableCellLine extends table_Block {
   format(name, value) {
     if (CELL_ATTRIBUTES.concat(CELL_IDENTITY_KEYS).indexOf(name) > -1) {
       if (value) {
-        this.domNode.setAttribute("data-".concat(name), value);
+        this.domNode.setAttribute(`data-${name}`, value);
       } else {
-        this.domNode.removeAttribute("data-".concat(name));
+        this.domNode.removeAttribute(`data-${name}`);
       }
     } else if (name === 'cell-bg') {
       if (value) {
@@ -1475,7 +1544,7 @@ class TableCell extends Container {
       this.toggleAttribute(name, value);
       this.formatChildren(name, value);
     } else if (['row'].indexOf(name) > -1) {
-      this.toggleAttribute("data-".concat(name), value);
+      this.toggleAttribute(`data-${name}`, value);
       this.formatChildren(name, value);
     } else if (name === 'cell-bg') {
       this.toggleAttribute('data-cell-bg', value);
@@ -1545,8 +1614,8 @@ class TableRow extends Container {
 
   formats() {
     return ["row"].reduce((formats, attrName) => {
-      if (this.domNode.hasAttribute("data-".concat(attrName))) {
-        formats[attrName] = this.domNode.getAttribute("data-".concat(attrName));
+      if (this.domNode.hasAttribute(`data-${attrName}`)) {
+        formats[attrName] = this.domNode.getAttribute(`data-${attrName}`);
       }
 
       return formats;
@@ -1601,15 +1670,15 @@ class TableCol extends table_Block {
   static create(value) {
     let node = super.create(value);
     COL_ATTRIBUTES.forEach(attrName => {
-      node.setAttribute("".concat(attrName), value[attrName] || COL_DEFAULT[attrName]);
+      node.setAttribute(`${attrName}`, value[attrName] || COL_DEFAULT[attrName]);
     });
     return node;
   }
 
   static formats(domNode) {
     return COL_ATTRIBUTES.reduce((formats, attribute) => {
-      if (domNode.hasAttribute("".concat(attribute))) {
-        formats[attribute] = domNode.getAttribute("".concat(attribute)) || undefined;
+      if (domNode.hasAttribute(`${attribute}`)) {
+        formats[attribute] = domNode.getAttribute(`${attribute}`) || undefined;
       }
 
       return formats;
@@ -1618,7 +1687,7 @@ class TableCol extends table_Block {
 
   format(name, value) {
     if (COL_ATTRIBUTES.indexOf(name) > -1) {
-      this.domNode.setAttribute("".concat(name), value || COL_DEFAULT[name]);
+      this.domNode.setAttribute(`${name}`, value || COL_DEFAULT[name]);
     } else {
       super.format(name, value);
     }
@@ -1657,7 +1726,7 @@ class table_TableContainer extends Container {
         sumWidth = sumWidth + parseInt(col.formats()[TableCol.blotName].width, 10);
         return sumWidth;
       }, 0);
-      this.domNode.style.width = "".concat(tableWidth, "px");
+      this.domNode.style.width = `${tableWidth}px`;
     }, 0);
   }
 
@@ -1669,9 +1738,7 @@ class table_TableContainer extends Container {
     return this.children.head;
   }
 
-  deleteColumns(compareRect) {
-    let delIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    let editorWrapper = arguments.length > 2 ? arguments[2] : undefined;
+  deleteColumns(compareRect, delIndexes = [], editorWrapper) {
     const [body] = this.descendants(TableBody);
     if (body == null || body.children.head == null) return;
     const tableCells = this.descendants(TableCell);
@@ -1782,11 +1849,11 @@ class table_TableContainer extends Container {
   }
 
   tableDestroy() {
-    const quill = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.scroll.domNode.parentNode);
+    const quill = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.scroll.domNode.parentNode);
     const tableModule = quill.getModule("better-table");
     this.remove();
     tableModule.hideTableTools();
-    quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+    quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
   }
 
   insertCell(tableRow, ref) {
@@ -1808,9 +1875,7 @@ class table_TableContainer extends Container {
     }
   }
 
-  insertColumn(compareRect, colIndex) {
-    let isRight = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-    let editorWrapper = arguments.length > 3 ? arguments[3] : undefined;
+  insertColumn(compareRect, colIndex, isRight = true, editorWrapper) {
     const [body] = this.descendants(TableBody);
     const [tableColGroup] = this.descendants(TableColGroup);
     const tableCols = this.descendants(TableCol);
@@ -2055,7 +2120,7 @@ table_TableContainer.tagName = "TABLE";
 class table_TableViewWrapper extends Container {
   constructor(scroll, domNode) {
     super(scroll, domNode);
-    const quill = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(scroll.domNode.parentNode);
+    const quill = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(scroll.domNode.parentNode);
     domNode.addEventListener('scroll', e => {
       const tableModule = quill.getModule('better-table');
 
@@ -2094,12 +2159,12 @@ TableCol.requiredContainer = TableColGroup;
 
 function table_rowId() {
   const id = Math.random().toString(36).slice(2, 6);
-  return "row-".concat(id);
+  return `row-${id}`;
 }
 
 function table_cellId() {
   const id = Math.random().toString(36).slice(2, 6);
-  return "cell-".concat(id);
+  return `cell-${id}`;
 }
 
 
@@ -2178,7 +2243,7 @@ class table_selection_TableSelection {
   }
 
   correctBoundary() {
-    const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+    const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
     const tableCells = tableContainer.descendants(TableCell);
     tableCells.forEach(tableCell => {
       let {
@@ -2201,7 +2266,7 @@ class table_selection_TableSelection {
   }
 
   computeSelectedTds() {
-    const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+    const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
     const tableCells = tableContainer.descendants(TableCell);
     return tableCells.reduce((selectedCells, tableCell) => {
       let {
@@ -2224,30 +2289,30 @@ class table_selection_TableSelection {
     const tableViewScrollLeft = this.table.parentNode.scrollLeft;
     css(this.left, {
       display: 'block',
-      left: "".concat(this.boundary.x - tableViewScrollLeft - 1, "px"),
-      top: "".concat(this.boundary.y, "px"),
-      height: "".concat(this.boundary.height + 1, "px"),
+      left: `${this.boundary.x - tableViewScrollLeft - 1}px`,
+      top: `${this.boundary.y}px`,
+      height: `${this.boundary.height + 1}px`,
       width: '1px'
     });
     css(this.right, {
       display: 'block',
-      left: "".concat(this.boundary.x1 - tableViewScrollLeft, "px"),
-      top: "".concat(this.boundary.y, "px"),
-      height: "".concat(this.boundary.height + 1, "px"),
+      left: `${this.boundary.x1 - tableViewScrollLeft}px`,
+      top: `${this.boundary.y}px`,
+      height: `${this.boundary.height + 1}px`,
       width: '1px'
     });
     css(this.top, {
       display: 'block',
-      left: "".concat(this.boundary.x - 1 - tableViewScrollLeft, "px"),
-      top: "".concat(this.boundary.y, "px"),
-      width: "".concat(this.boundary.width + 1, "px"),
+      left: `${this.boundary.x - 1 - tableViewScrollLeft}px`,
+      top: `${this.boundary.y}px`,
+      width: `${this.boundary.width + 1}px`,
       height: '1px'
     });
     css(this.bottom, {
       display: 'block',
-      left: "".concat(this.boundary.x - 1 - tableViewScrollLeft, "px"),
-      top: "".concat(this.boundary.y1 + 1, "px"),
-      width: "".concat(this.boundary.width + 1, "px"),
+      left: `${this.boundary.x - 1 - tableViewScrollLeft}px`,
+      top: `${this.boundary.y1 + 1}px`,
+      width: `${this.boundary.width + 1}px`,
       height: '1px'
     });
   } // based on selectedTds compute positions of help lines
@@ -2366,14 +2431,14 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_1_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       let colIndex = getColToolCellIndexByBoundary(this.columnToolCells, this.boundary, (cellRect, boundary) => {
         return Math.abs(cellRect.x + cellRect.width - boundary.x1) <= table_operation_menu_ERROR_LIMIT;
       }, this.quill.root.parentNode);
       const newColumn = tableContainer.insertColumn(this.boundary, colIndex, true, this.quill.root.parentNode);
       this.tableColumnTool.updateToolCells();
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
-      this.quill.setSelection(this.quill.getIndex(newColumn[0]), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.SILENT);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
+      this.quill.setSelection(this.quill.getIndex(newColumn[0]), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.SILENT);
       this.tableSelection.setSelection(newColumn[0].domNode.getBoundingClientRect(), newColumn[0].domNode.getBoundingClientRect());
     }
 
@@ -2383,14 +2448,14 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_2_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       let colIndex = getColToolCellIndexByBoundary(this.columnToolCells, this.boundary, (cellRect, boundary) => {
         return Math.abs(cellRect.x - boundary.x) <= table_operation_menu_ERROR_LIMIT;
       }, this.quill.root.parentNode);
       const newColumn = tableContainer.insertColumn(this.boundary, colIndex, false, this.quill.root.parentNode);
       this.tableColumnTool.updateToolCells();
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
-      this.quill.setSelection(this.quill.getIndex(newColumn[0]), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.SILENT);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
+      this.quill.setSelection(this.quill.getIndex(newColumn[0]), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.SILENT);
       this.tableSelection.setSelection(newColumn[0].domNode.getBoundingClientRect(), newColumn[0].domNode.getBoundingClientRect());
     }
 
@@ -2400,10 +2465,10 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_3_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       const affectedCells = tableContainer.insertRow(this.boundary, false, this.quill.root.parentNode);
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
-      this.quill.setSelection(this.quill.getIndex(affectedCells[0]), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.SILENT);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
+      this.quill.setSelection(this.quill.getIndex(affectedCells[0]), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.SILENT);
       this.tableSelection.setSelection(affectedCells[0].domNode.getBoundingClientRect(), affectedCells[0].domNode.getBoundingClientRect());
     }
 
@@ -2413,10 +2478,10 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_4_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       const affectedCells = tableContainer.insertRow(this.boundary, true, this.quill.root.parentNode);
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
-      this.quill.setSelection(this.quill.getIndex(affectedCells[0]), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.SILENT);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
+      this.quill.setSelection(this.quill.getIndex(affectedCells[0]), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.SILENT);
       this.tableSelection.setSelection(affectedCells[0].domNode.getBoundingClientRect(), affectedCells[0].domNode.getBoundingClientRect());
     }
 
@@ -2426,7 +2491,7 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_5_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table); // compute merged Cell rowspan, equal to length of selected rows
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table); // compute merged Cell rowspan, equal to length of selected rows
 
       const rowspan = tableContainer.rows().reduce((sum, row) => {
         let rowRect = getRelativeRect(row.domNode.getBoundingClientRect(), this.quill.root.parentNode);
@@ -2448,7 +2513,7 @@ const MENU_ITEMS_DEFAULT = {
         return sum;
       }, 0);
       const mergedCell = tableContainer.mergeCells(this.boundary, this.selectedTds, rowspan, colspan, this.quill.root.parentNode);
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
       this.tableSelection.setSelection(mergedCell.domNode.getBoundingClientRect(), mergedCell.domNode.getBoundingClientRect());
     }
 
@@ -2458,9 +2523,9 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_6_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       tableContainer.unmergeCells(this.selectedTds, this.quill.root.parentNode);
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
       this.tableSelection.clearSelection();
     }
 
@@ -2470,7 +2535,7 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_7_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       let colIndexes = getColToolCellIndexesByBoundary(this.columnToolCells, this.boundary, (cellRect, boundary) => {
         return cellRect.x + table_operation_menu_ERROR_LIMIT > boundary.x && cellRect.x + cellRect.width - table_operation_menu_ERROR_LIMIT < boundary.x1;
       }, this.quill.root.parentNode);
@@ -2478,7 +2543,7 @@ const MENU_ITEMS_DEFAULT = {
 
       if (!isDeleteTable) {
         this.tableColumnTool.updateToolCells();
-        this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+        this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
         this.tableSelection.clearSelection();
       }
     }
@@ -2489,9 +2554,9 @@ const MENU_ITEMS_DEFAULT = {
     iconSrc: icon_operation_8_default.a,
 
     handler() {
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       tableContainer.deleteRow(this.boundary, this.quill.root.parentNode);
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
       this.tableSelection.clearSelection();
     }
 
@@ -2502,10 +2567,10 @@ const MENU_ITEMS_DEFAULT = {
 
     handler() {
       const betterTableModule = this.quill.getModule('better-table');
-      const tableContainer = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.find(this.table);
+      const tableContainer = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].find(this.table);
       betterTableModule.hideTableTools();
       tableContainer.remove();
-      this.quill.update(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+      this.quill.update(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
     }
 
   }
@@ -2540,20 +2605,19 @@ class table_operation_menu_TableOperationMenu {
     return null;
   }
 
-  menuInitial(_ref) {
-    let {
-      table,
-      left,
-      top
-    } = _ref;
+  menuInitial({
+    table,
+    left,
+    top
+  }) {
     this.domNode = document.createElement('div');
     this.domNode.classList.add('qlbt-operation-menu');
     css(this.domNode, {
       position: 'absolute',
-      left: "".concat(left, "px"),
-      top: "".concat(top, "px"),
-      'min-height': "".concat(MENU_MIN_HEIHGT, "px"),
-      width: "".concat(MENU_WIDTH, "px")
+      left: `${left}px`,
+      top: `${top}px`,
+      'min-height': `${MENU_MIN_HEIHGT}px`,
+      width: `${MENU_WIDTH}px`
     });
 
     for (let name in this.menuItems) {
@@ -2618,12 +2682,11 @@ class table_operation_menu_TableOperationMenu {
     return node;
   }
 
-  menuItemCreator(_ref2) {
-    let {
-      text,
-      iconSrc,
-      handler
-    } = _ref2;
+  menuItemCreator({
+    text,
+    iconSrc,
+    handler
+  }) {
     const node = document.createElement('div');
     node.classList.add('qlbt-operation-menu-item');
     const iconSpan = document.createElement('span');
@@ -2663,6 +2726,10 @@ function getColToolCellIndexesByBoundary(cells, boundary, conditionFn, container
     return findIndexes;
   }, []);
 }
+// EXTERNAL MODULE: external {"commonjs":"quill","commonjs2":"quill","amd":"quill","root":"Quill"}
+var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_ = __webpack_require__(10);
+var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_);
+
 // CONCATENATED MODULE: ./src/utils/node-matchers.js
 
 
@@ -2880,21 +2947,21 @@ function matchTable(node, delta, scroll) {
 
 
 
-const Module = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import('core/module');
-const quill_better_table_Delta = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import('delta');
+const Module = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import('core/module');
+const quill_better_table_Delta = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import('delta');
 
 
 class quill_better_table_BetterTable extends Module {
   static register() {
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(TableCol, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(TableColGroup, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(TableCellLine, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(TableCell, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(TableRow, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(TableBody, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(table_TableContainer, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(table_TableViewWrapper, true);
-    external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.register(table_TableViewWrapper, true); // register customized Header，overwriting quill built-in Header
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(TableCol, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(TableColGroup, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(TableCellLine, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(TableCell, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(TableRow, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(TableBody, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(table_TableContainer, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(table_TableViewWrapper, true);
+    external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].register(table_TableViewWrapper, true); // register customized Header，overwriting quill built-in Header
     // Quill.register('formats/header', Header, true);
   }
 
@@ -2990,8 +3057,7 @@ class quill_better_table_BetterTable extends Module {
     });
   }
 
-  getTable() {
-    let range = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.quill.getSelection();
+  getTable(range = this.quill.getSelection()) {
     if (range == null) return [null, null, null, -1];
     const [cellLine, offset] = this.quill.getLine(range.index);
 
@@ -3012,7 +3078,7 @@ class quill_better_table_BetterTable extends Module {
     let delta = new quill_better_table_Delta().retain(range.index);
 
     if (isInTableCell(currentBlot)) {
-      console.warn("Can not insert table into a table cell.");
+      console.warn(`Can not insert table into a table cell.`);
       return;
     }
 
@@ -3037,8 +3103,8 @@ class quill_better_table_BetterTable extends Module {
         return memo;
       }, memo);
     }, delta);
-    this.quill.updateContents(delta, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
-    this.quill.setSelection(range.index + columns + 1, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.API);
+    this.quill.updateContents(delta, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
+    this.quill.setSelection(range.index + columns + 1, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.API);
   }
 
   showTableTools(table, quill, options) {
@@ -3094,7 +3160,7 @@ quill_better_table_BetterTable.keyboardBindings = {
     handler(range, context) {
       // bugfix: a unexpected new line inserted when user compositionend with hitting Enter
       if (this.quill.selection && this.quill.selection.composing) return;
-      const Scope = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.imports.parchment.Scope;
+      const Scope = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].imports.parchment.Scope;
 
       if (range.length > 0) {
         this.quill.scroll.deleteAt(range.index, range.length); // So we do not trigger text-change
@@ -3108,16 +3174,16 @@ quill_better_table_BetterTable.keyboardBindings = {
         return formats;
       }, {}); // insert new cellLine with lineFormats
 
-      this.quill.insertText(range.index, '\n', lineFormats['table-cell-line'], external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER); // Earlier scroll.deleteAt might have messed up our selection,
+      this.quill.insertText(range.index, '\n', lineFormats['table-cell-line'], external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER); // Earlier scroll.deleteAt might have messed up our selection,
       // so insertText's built in selection preservation is not reliable
 
-      this.quill.setSelection(range.index + 1, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.SILENT);
+      this.quill.setSelection(range.index + 1, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.SILENT);
       this.quill.focus();
       Object.keys(context.format).forEach(name => {
         if (lineFormats[name] != null) return;
         if (Array.isArray(context.format[name])) return;
         if (name === 'link') return;
-        this.quill.format(name, context.format[name], external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+        this.quill.format(name, context.format[name], external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
       });
     }
 
@@ -3134,7 +3200,7 @@ quill_better_table_BetterTable.keyboardBindings = {
       if (target && target.statics.blotName === 'table-view') {
         const targetCell = target.table().rows()[0].children.head;
         const targetLine = targetCell.children.head;
-        this.quill.setSelection(targetLine.offset(this.quill.scroll), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+        this.quill.setSelection(targetLine.offset(this.quill.scroll), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
         return false;
       }
 
@@ -3153,7 +3219,7 @@ quill_better_table_BetterTable.keyboardBindings = {
         const rows = target.table().rows();
         const targetCell = rows[rows.length - 1].children.head;
         const targetLine = targetCell.children.head;
-        this.quill.setSelection(targetLine.offset(this.quill.scroll), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+        this.quill.setSelection(targetLine.offset(this.quill.scroll), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
         return false;
       }
 
@@ -3194,15 +3260,15 @@ function makeTableArrowHandler(up) {
         }
 
         const index = targetCell.offset(this.quill.scroll);
-        this.quill.setSelection(index, 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+        this.quill.setSelection(index, 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
       } else {
         const targetLine = cell.table().parent[key];
 
         if (targetLine != null) {
           if (up) {
-            this.quill.setSelection(targetLine.offset(this.quill.scroll) + targetLine.length() - 1, 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+            this.quill.setSelection(targetLine.offset(this.quill.scroll) + targetLine.length() - 1, 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
           } else {
-            this.quill.setSelection(targetLine.offset(this.quill.scroll), 0, external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.sources.USER);
+            this.quill.setSelection(targetLine.offset(this.quill.scroll), 0, external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].sources.USER);
           }
         }
       }
@@ -3224,20 +3290,20 @@ function isInTableCell(current) {
 /* harmony default export */ var quill_better_table = __webpack_exports__["default"] = (quill_better_table_BetterTable);
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
-/* 12 */,
-/* 13 */
+/* 13 */,
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var src_quill_better_table_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
-/* harmony import */ var src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(11);
+/* harmony import */ var src_quill_better_table_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
+/* harmony import */ var src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12);
 /* harmony import */ var src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1__);
  // import better-table styles file
 

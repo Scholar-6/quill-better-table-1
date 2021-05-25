@@ -1,4 +1,4 @@
-import Quill from 'quill'
+import { Quill } from 'react-quill'
 import { css } from '../utils'
 
 const COL_TOOL_HEIGHT = 12

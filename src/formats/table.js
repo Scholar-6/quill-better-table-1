@@ -1,4 +1,4 @@
-import Quill from "quill"
+import { Quill } from "react-quill"
 import { getRelativeRect } from '../utils'
 import Header from './header'
 

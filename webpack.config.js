@@ -50,6 +50,11 @@ module.exports = (env, argv) => {
         commonjs2: 'quill',
         amd: 'quill',
         root: 'Quill'
+      },
+      'react-quill': {
+        commonjs: 'react-quill',
+        commonjs2: 'react-quill',
+        amd: 'react-quill',
       }
     },
 
