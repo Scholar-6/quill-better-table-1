@@ -1,6 +1,6 @@
 {
   "name": "quill-better-table",
-  "version": "1.2.12",
+  "version": "1.2.13",
   "description": "Module for better table in Quill, more useful features are supported.",
   "main": "dist/quill-better-table.js",
   "scripts": {
@@ -25,7 +25,9 @@
     "url": "https://github.com/soccerloway/quill-better-table/issues"
   },
   "homepage": "https://github.com/soccerloway/quill-better-table#readme",
-  "dependencies": {},
+  "dependencies": {
+    "quill": "https://github.com/Scholar-6/quill/tarball/master"
+  },
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
@@ -37,7 +39,6 @@
     "html-webpack-plugin": "^3.2.0",
     "mini-css-extract-plugin": "^0.5.0",
     "node-sass": "^4.11.0",
-    "quill": "https://github.com/Scholar-6/quill/tarball/master",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
