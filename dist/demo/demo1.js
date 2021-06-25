@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "6049acfc8d0f01b67a5b";
+/******/ 	var hotCurrentHash = "2962a62524a58d305e00";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -937,7 +937,6 @@ __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: external {"commonjs":"react-quill","commonjs2":"react-quill","amd":"react-quill"}
 var external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_ = __webpack_require__(0);
-var external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_);
 
 // CONCATENATED MODULE: ./src/utils/index.js
 function css(domNode, rules) {
@@ -2724,7 +2723,7 @@ function getColToolCellIndexesByBoundary(cells, boundary, conditionFn, container
 // CONCATENATED MODULE: ./src/utils/node-matchers.js
 
 
-const Delta = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_default.a.import('delta'); // rebuild delta
+const Delta = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import('delta'); // rebuild delta
 
 function matchTableCell(node, delta, scroll) {
   const row = node.parentNode;
