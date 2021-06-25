@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("react-quill"), require("quill"));
+		module.exports = factory(require("react-quill"));
 	else if(typeof define === 'function' && define.amd)
-		define(["react-quill", "quill"], factory);
+		define(["react-quill"], factory);
 	else if(typeof exports === 'object')
-		exports["quillBetterTable"] = factory(require("react-quill"), require("quill"));
+		exports["quillBetterTable"] = factory(require("react-quill"));
 	else
-		root["quillBetterTable"] = factory(root[undefined], root["Quill"]);
-})(window, function(__WEBPACK_EXTERNAL_MODULE__0__, __WEBPACK_EXTERNAL_MODULE__10__) {
+		root["quillBetterTable"] = factory(root[undefined]);
+})(window, function(__WEBPACK_EXTERNAL_MODULE__0__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	function hotDisposeChunk(chunkId) {
 /******/ 		delete installedChunks[chunkId];
@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "0f3489899ea545892423";
+/******/ 	var hotCurrentHash = "6049acfc8d0f01b67a5b";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -864,7 +864,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return hotCreateRequire(14)(__webpack_require__.s = 14);
+/******/ 	return hotCreateRequire(13)(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -929,12 +929,6 @@ module.exports = "<?xml version=\"1.0\" standalone=\"no\"?><!doctype html><svg c
 
 /***/ }),
 /* 10 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__10__;
-
-/***/ }),
-/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -943,6 +937,7 @@ __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: external {"commonjs":"react-quill","commonjs2":"react-quill","amd":"react-quill"}
 var external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_ = __webpack_require__(0);
+var external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_);
 
 // CONCATENATED MODULE: ./src/utils/index.js
 function css(domNode, rules) {
@@ -2726,14 +2721,10 @@ function getColToolCellIndexesByBoundary(cells, boundary, conditionFn, container
     return findIndexes;
   }, []);
 }
-// EXTERNAL MODULE: external {"commonjs":"quill","commonjs2":"quill","amd":"quill","root":"Quill"}
-var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_ = __webpack_require__(10);
-var external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_);
-
 // CONCATENATED MODULE: ./src/utils/node-matchers.js
 
 
-const Delta = external_commonjs_quill_commonjs2_quill_amd_quill_root_Quill_default.a.import('delta'); // rebuild delta
+const Delta = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_default.a.import('delta'); // rebuild delta
 
 function matchTableCell(node, delta, scroll) {
   const row = node.parentNode;
@@ -3290,20 +3281,20 @@ function isInTableCell(current) {
 /* harmony default export */ var quill_better_table = __webpack_exports__["default"] = (quill_better_table_BetterTable);
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // extracted by mini-css-extract-plugin
 
 /***/ }),
-/* 13 */,
-/* 14 */
+/* 12 */,
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var src_quill_better_table_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(11);
-/* harmony import */ var src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(12);
+/* harmony import */ var src_quill_better_table_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(10);
+/* harmony import */ var src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(11);
 /* harmony import */ var src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(src_assets_quill_better_table_scss__WEBPACK_IMPORTED_MODULE_1__);
  // import better-table styles file
 
