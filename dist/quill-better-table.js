@@ -2726,7 +2726,6 @@ function getColToolCellIndexesByBoundary(cells, boundary, conditionFn, container
 const Delta = external_commonjs_react_quill_commonjs2_react_quill_amd_react_quill_["Quill"].import('delta'); // rebuild delta
 
 function matchTableCell(node, delta, scroll) {
-  delta.ops.map(opsR3 => opsR3.insert = opsR3.insert.replace(/\n/g, ''));
   const row = node.parentNode;
   const table = row.parentNode.tagName === 'TABLE' ? row.parentNode : row.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
@@ -2749,6 +2748,8 @@ function matchTableCell(node, delta, scroll) {
     });
     return delta;
   }
+
+  delta.ops.map(opsR3 => opsR3.insert = opsR3.insert.replace(/\n/g, ''));
 
   delta = delta.reduce((newDelta, op) => {
     if (op.insert && typeof op.insert === 'string') {
